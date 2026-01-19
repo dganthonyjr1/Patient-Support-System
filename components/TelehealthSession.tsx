@@ -4,7 +4,7 @@ import { PatientDetails } from '../types';
 
 interface TelehealthSessionProps {
   onEndCall: () => void;
-  patientDetails: PatientDetails;
+  patientDetails?: PatientDetails;
 }
 
 type ConnectionStatus = 'initializing' | 'waiting' | 'incoming' | 'connecting' | 'connected';

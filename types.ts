@@ -29,7 +29,6 @@ export interface AudioConfig {
 
 export interface PatientDetails {
   name: string;
-  dob: string;
-  reason: string;
-  accessCode: string;
+  email: string;
+  phone: string;
 }

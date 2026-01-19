@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { ShieldCheck, User, Calendar, FileText, ArrowRight, Lock, KeyRound } from 'lucide-react';
-import { PatientDetails } from '../types';
+import { ShieldCheck, User, Phone, Mail, ArrowRight, CheckCircle } from 'lucide-react';
 
-interface PatientAuthFormProps {
-  onComplete: (details: PatientDetails) => void;
+interface PatientCheckInProps {
+  onComplete: (details: { name: string; email: string; phone: string }) => void;
   onCancel: () => void;
 }
 
-export const PatientAuthForm: React.FC<PatientAuthFormProps> = ({ onComplete, onCancel }) => {
-  const [formData, setFormData] = useState<PatientDetails>({
+export const PatientAuthForm: React.FC<PatientCheckInProps> = ({ onComplete, onCancel }) => {
+  const [formData, setFormData] = useState({
     name: '',
-    dob: '',
-    reason: '',
-    accessCode: ''
+    email: '',
+    phone: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,20 +18,28 @@ export const PatientAuthForm: React.FC<PatientAuthFormProps> = ({ onComplete, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    // Validate Access Code Format (Mock validation)
-    if (formData.accessCode.length < 6) {
-        setLoading(false);
-        setError("Invalid Access Code. Please check your appointment confirmation.");
-        return;
+    // Validate form
+    if (!formData.name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (!formData.email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setError('Please enter your phone number');
+      return;
     }
 
-    // Simulate secure handshake/validation delay
+    setLoading(true);
+
+    // Simulate verification delay
     setTimeout(() => {
       onComplete(formData);
       setLoading(false);
-    }, 2000);
+    }, 1500);
   };
 
   return (
@@ -45,8 +51,8 @@ export const PatientAuthForm: React.FC<PatientAuthFormProps> = ({ onComplete, on
           <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm border border-white/20">
             <ShieldCheck className="w-6 h-6 text-teal-300" />
           </div>
-          <h2 className="text-xl font-serif font-bold">Secure Patient Check-In</h2>
-          <p className="text-teal-200 text-xs mt-1">Authorized Appointments Only</p>
+          <h2 className="text-xl font-serif font-bold">Ready for Your Appointment?</h2>
+          <p className="text-teal-200 text-xs mt-1">Quick Check-In</p>
         </div>
       </div>
 
@@ -54,16 +60,17 @@ export const PatientAuthForm: React.FC<PatientAuthFormProps> = ({ onComplete, on
       <form onSubmit={handleSubmit} className="p-8 space-y-5">
         
         {error && (
-            <div className="bg-red-50 text-red-600 text-xs p-3 rounded-lg flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4" />
-                {error}
-            </div>
+          <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            {error}
+          </div>
         )}
 
         <div className="space-y-4">
+          {/* Full Name */}
           <div>
-            <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">
-              Full Legal Name
+            <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-2">
+              Full Name
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -73,88 +80,72 @@ export const PatientAuthForm: React.FC<PatientAuthFormProps> = ({ onComplete, on
                 type="text"
                 required
                 className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-stone-900 placeholder-stone-400"
-                placeholder="e.g. Jane Doe"
+                placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
               />
             </div>
           </div>
 
+          {/* Email */}
           <div>
-            <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">
-              Date of Birth
+            <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-2">
+              Email Address
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-stone-400" />
+                <Mail className="h-5 w-5 text-stone-400" />
               </div>
               <input
-                type="date"
+                type="email"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-stone-900"
-                value={formData.dob}
-                onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-stone-900 placeholder-stone-400"
+                placeholder="john@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
             </div>
           </div>
 
+          {/* Phone Number */}
           <div>
-             <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">
-               Appointment Access Code
-             </label>
-             <div className="relative">
-               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                 <KeyRound className="h-5 w-5 text-teal-600" />
-               </div>
-               <input
-                 type="text"
-                 required
-                 maxLength={10}
-                 className="w-full pl-10 pr-4 py-3 bg-teal-50 border border-teal-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-stone-900 font-mono tracking-widest placeholder-teal-300"
-                 placeholder="######"
-                 value={formData.accessCode}
-                 onChange={(e) => setFormData({...formData, accessCode: e.target.value.toUpperCase()})}
-               />
-               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                 <Lock className="h-4 w-4 text-teal-400" />
-               </div>
-             </div>
-             <p className="text-[10px] text-stone-400 mt-1 ml-1">
-               * Required. Provided by office staff for scheduled video visits.
-             </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">
-              Type of Visit
+            <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-2">
+              Phone Number
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FileText className="h-5 w-5 text-stone-400" />
+                <Phone className="h-5 w-5 text-stone-400" />
               </div>
-              <select
+              <input
+                type="tel"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-stone-900 appearance-none"
-                value={formData.reason}
-                onChange={(e) => setFormData({...formData, reason: e.target.value})}
-              >
-                <option value="" disabled>Select verified reason...</option>
-                <option value="followup">Scheduled Follow-up</option>
-                <option value="medication">Medication Review</option>
-                <option value="crisis">Urgent Consultation</option>
-              </select>
+                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-stone-900 placeholder-stone-400"
+                placeholder="(555) 123-4567"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
             </div>
           </div>
         </div>
 
+        {/* Submit Button */}
         <div className="pt-2">
           <button
             type="submit"
             disabled={loading}
             className={`w-full bg-teal-800 hover:bg-teal-900 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${loading ? 'opacity-80 cursor-wait' : 'hover:scale-[1.02]'}`}
           >
-            {loading ? 'Verifying Authorization...' : 'Authenticate & Join'}
-            {!loading && <ArrowRight className="w-5 h-5" />}
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Verifying...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                Continue to Telehealth
+              </>
+            )}
           </button>
           
           <button 
@@ -166,9 +157,10 @@ export const PatientAuthForm: React.FC<PatientAuthFormProps> = ({ onComplete, on
           </button>
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-xs text-stone-400 bg-stone-50 py-2 rounded-lg">
-          <Lock className="w-3 h-3" />
-          <span>Strictly Confidential & Encrypted</span>
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-2 text-xs text-stone-400 bg-stone-50 py-3 rounded-lg">
+          <ShieldCheck className="w-3 h-3" />
+          <span>Secure HIPAA-Compliant Connection</span>
         </div>
 
       </form>

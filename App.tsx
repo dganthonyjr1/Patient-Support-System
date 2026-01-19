@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Phone, Clock, FileText, AlertCircle, Calendar, ChevronRight, Video, Stethoscope, ArrowLeft, Mail, MessageSquare, Settings, Copy, X, Smartphone, Zap, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
 import { VoiceVisualizer } from './components/VoiceVisualizer';
 import { TelehealthSession } from './components/TelehealthSession';
-import { PatientAuthForm } from './components/PatientAuthForm';
+import { MagicLinkJoin } from './components/MagicLinkJoin';
+import { TestDashboard } from './components/TestDashboard';
 import { GeminiLiveService, SYSTEM_INSTRUCTION, logInteractionTool, sendPortalLinkTool } from './services/geminiLiveService';
-import { InteractionLog, PatientDetails } from './types';
+import { InteractionLog } from './types';
 
 // REPLACE THIS WITH YOUR ACTUAL RETELL PHONE NUMBER
 const RETELL_PHONE_NUMBER = "+1 (415) 555-0199";
 
-type ViewState = 'assistant' | 'telehealth';
+type ViewState = 'assistant' | 'telehealth' | 'magic-link-join';
 
 interface Notification {
   id: string;
@@ -63,7 +64,8 @@ export default function App() {
   const [logs, setLogs] = useState<InteractionLog[]>([]);
   const [notification, setNotification] = useState<Notification | null>(null);
   const [showRetellConfig, setShowRetellConfig] = useState(false);
-  const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(null);
+  const [showTestDashboard, setShowTestDashboard] = useState(false);
+  const [magicLinkToken, setMagicLinkToken] = useState<string | null>(null);
   
   // Retell Sync State - Pre-filled with provided key
   const [retellApiKey, setRetellApiKey] = useState("key_a07875e170316b0f6f8481a00965");
@@ -133,8 +135,38 @@ export default function App() {
 
   const exitTelehealth = () => {
     setView('assistant');
-    setPatientDetails(null); // Reset auth details on exit
   };
+
+  // Check for magic link token in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setMagicLinkToken(token);
+      setView('magic-link-join');
+    }
+  }, []);
+
+  const handleMagicLinkSuccess = (appointmentId: string, patientName: string) => {
+    setView('telehealth');
+    setMagicLinkToken(null);
+  };
+
+  const handleMagicLinkError = (error: string) => {
+    console.error('Magic link error:', error);
+    // User will see error in MagicLinkJoin component
+  };
+
+  // Hidden test dashboard toggle (Ctrl+Shift+T)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+        setShowTestDashboard(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -399,9 +431,26 @@ export default function App() {
         </div>
       </header>
 
+      {/* Test Dashboard Modal */}
+      {showTestDashboard && (
+        <TestDashboard onClose={() => setShowTestDashboard(false)} />
+      )}
+
+      {/* Magic Link Join View */}
+      {view === 'magic-link-join' && magicLinkToken && (
+        <MagicLinkJoin
+          token={magicLinkToken}
+          onSuccess={handleMagicLinkSuccess}
+          onError={handleMagicLinkError}
+        />
+      )}
+
       {/* Hero Section */}
+      {view !== 'magic-link-join' && (
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-12">
         
+
+
         {/* Navigation Breadcrumb (Only visible in Telehealth) */}
         {view === 'telehealth' && (
           <button 
@@ -470,34 +519,63 @@ export default function App() {
                     If you are experiencing a medical or psychiatric emergency, please hang up and dial 911 immediately.
                   </p>
                 </div>
+
+                <VoiceVisualizer 
+                  status={status} 
+                  audioLevel={audioLevel}
+                  onStart={handleStart} 
+                  onStop={handleStop} 
+                />
+
+                {/* Retell Phone Call Option - NEW */}
+                <div className="bg-gradient-to-r from-stone-900 to-stone-800 rounded-xl p-6 text-white flex items-center justify-between shadow-lg relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 p-24 bg-teal-500/10 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-teal-500/20 transition-all"></div>
+                   <div className="relative z-10 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+                         <Phone className="w-6 h-6 text-teal-300" />
+                      </div>
+                      <div>
+                         <h3 className="font-serif font-bold text-lg">Prefer to call via Phone?</h3>
+                         <p className="text-stone-300 text-sm">Talk to our AI Agent on a real line.</p>
+                      </div>
+                   </div>
+                   <button 
+                     onClick={() => setShowRetellConfig(true)}
+                     className="relative z-10 px-6 py-3 bg-white text-stone-900 rounded-full font-bold text-sm hover:bg-teal-50 transition-colors shadow-md flex items-center gap-2"
+                   >
+                     <Smartphone className="w-4 h-4" />
+                     {RETELL_PHONE_NUMBER} <span className="text-stone-400 font-normal">(Demo)</span>
+                   </button>
+                </div>
+
+                {/* Disclaimer */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3 text-sm text-amber-900">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p>
+                    <strong>Disclaimer:</strong> This automated system cannot provide medical diagnoses or emergency care. 
+                    If you are experiencing a medical or psychiatric emergency, please hang up and dial 911 immediately.
+                  </p>
+                </div>
               </>
             ) : (
-              // Telehealth View (Auth -> Session)
+              // Telehealth View (No authentication required)
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-4">
                   <h2 className="text-2xl font-serif font-bold text-stone-900 flex items-center gap-2">
                     <Video className="w-6 h-6 text-teal-600" />
-                    Telehealth Waiting Room
+                    Telehealth Session
                   </h2>
                   <p className="text-stone-500">
-                    {patientDetails ? "Secure connection established." : "Please verify your identity to continue."}
+                    Ready to connect with Dr. Meusburger.
                   </p>
                 </div>
                 
-                {/* Authentication Gate */}
-                {!patientDetails ? (
-                  <PatientAuthForm 
-                    onComplete={(details) => setPatientDetails(details)}
-                    onCancel={exitTelehealth}
-                  />
-                ) : (
-                  <TelehealthSession 
-                    patientDetails={patientDetails}
-                    onEndCall={exitTelehealth} 
-                  />
-                )}
+                {/* Telehealth Session - Direct Access */}
+                <TelehealthSession 
+                  onEndCall={exitTelehealth} 
+                />
               </div>
-            )}
+            )
           </div>
 
           {/* Sidebar Info (Right - 5 cols) */}
@@ -509,18 +587,18 @@ export default function App() {
                  <div className="absolute top-0 right-0 p-32 bg-teal-800/50 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
                  <div className="relative z-10">
                    <div className="w-12 h-12 bg-teal-700 rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                      <Stethoscope className="w-6 h-6 text-white" />
+                      <Video className="w-6 h-6 text-white" />
                    </div>
-                   <h3 className="text-xl font-serif font-bold mb-2">Scheduled Video Visit?</h3>
+                   <h3 className="text-xl font-serif font-bold mb-2">Ready for Video Visit?</h3>
                    <p className="text-teal-100 text-sm mb-6 leading-relaxed">
-                     If you have a confirmed appointment with Dr. Meusburger today, please enter the access code to join the session.
+                     Click below to join a secure telehealth session with Dr. Meusburger.
                    </p>
                    <button 
                      onClick={enterTelehealth}
                      className="w-full py-3 bg-white text-teal-900 font-semibold rounded-lg hover:bg-teal-50 transition-colors flex items-center justify-center gap-2"
                    >
                      <Video className="w-4 h-4" />
-                     Enter Waiting Room
+                     Start Video Session
                    </button>
                  </div>
               </div>
@@ -609,6 +687,7 @@ export default function App() {
           </div>
         </div>
       </main>
+      )}
       
       {/* Footer */}
       <footer className="bg-white border-t border-stone-200 py-12 mt-auto">
@@ -626,14 +705,19 @@ export default function App() {
             </p>
             <p className="mt-1">Please allow 24-48 hours for administrative responses.</p>
             
-            {/* Developer Trigger for Retell Config */}
-            <button 
-              onClick={() => setShowRetellConfig(true)}
-              className="mt-4 flex items-center gap-2 text-xs text-stone-400 hover:text-teal-700 transition-colors"
-            >
-              <Settings className="w-3 h-3" />
-              Developer: Retell Config
-            </button>
+            {/* Developer Triggers */}
+            <div className="mt-4 space-y-2">
+              <button 
+                onClick={() => setShowRetellConfig(true)}
+                className="flex items-center gap-2 text-xs text-stone-400 hover:text-teal-700 transition-colors"
+              >
+                <Settings className="w-3 h-3" />
+                Developer: Retell Config
+              </button>
+              <p className="text-xs text-stone-400">
+                Tip: Press Ctrl+Shift+T for test dashboard
+              </p>
+            </div>
           </div>
           <div>
              <h5 className="font-serif font-bold text-stone-900 mb-4">Secure System</h5>
