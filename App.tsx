@@ -581,28 +581,6 @@ export default function App() {
           {/* Sidebar Info (Right - 5 cols) */}
           <div className="lg:col-span-5 space-y-6">
             
-            {/* Telehealth Promo Card (Only visible if NOT in telehealth view) */}
-            {view === 'assistant' && (
-              <div className="bg-teal-900 text-white rounded-2xl p-8 shadow-lg relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-32 bg-teal-800/50 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                 <div className="relative z-10">
-                   <div className="w-12 h-12 bg-teal-700 rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                      <Video className="w-6 h-6 text-white" />
-                   </div>
-                   <h3 className="text-xl font-serif font-bold mb-2">Ready for Video Visit?</h3>
-                   <p className="text-teal-100 text-sm mb-6 leading-relaxed">
-                     Click below to join a secure telehealth session with Dr. Meusburger.
-                   </p>
-                   <button 
-                     onClick={enterTelehealth}
-                     className="w-full py-3 bg-white text-teal-900 font-semibold rounded-lg hover:bg-teal-50 transition-colors flex items-center justify-center gap-2"
-                   >
-                     <Video className="w-4 h-4" />
-                     Start Video Session
-                   </button>
-                 </div>
-              </div>
-            )}
 
             {/* Practice Facts Card */}
             <div className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
