@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Phone, Clock, FileText, AlertCircle, Calendar, ChevronRight, Video, Stethoscope, ArrowLeft, Mail, MessageSquare, Settings, Copy, X, Smartphone, Zap, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
 import { VoiceVisualizer } from './components/VoiceVisualizer';
-import { TelehealthSession } from './components/TelehealthSession';
+
 import { MagicLinkJoin } from './components/MagicLinkJoin';
 import { TestDashboard } from './components/TestDashboard';
 import { GeminiLiveService, SYSTEM_INSTRUCTION, logInteractionTool, sendPortalLinkTool } from './services/geminiLiveService';
@@ -10,7 +10,7 @@ import { InteractionLog } from './types';
 // REPLACE THIS WITH YOUR ACTUAL RETELL PHONE NUMBER
 const RETELL_PHONE_NUMBER = "+1 (415) 555-0199";
 
-type ViewState = 'assistant' | 'telehealth' | 'magic-link-join';
+type ViewState = 'assistant' | 'magic-link-join';
 
 interface Notification {
   id: string;
@@ -128,14 +128,7 @@ export default function App() {
     }
   };
 
-  const enterTelehealth = async () => {
-    if (serviceRef.current) await handleStop();
-    setView('telehealth');
-  };
 
-  const exitTelehealth = () => {
-    setView('assistant');
-  };
 
   // Check for magic link token in URL on mount
   useEffect(() => {
@@ -451,16 +444,7 @@ export default function App() {
         
 
 
-        {/* Navigation Breadcrumb (Only visible in Telehealth) */}
-        {view === 'telehealth' && (
-          <button 
-            onClick={exitTelehealth}
-            className="mb-6 flex items-center gap-2 text-sm text-stone-500 hover:text-teal-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Assistant
-          </button>
-        )}
+
 
         <div className="grid lg:grid-cols-12 gap-12 items-start">
           
@@ -557,25 +541,9 @@ export default function App() {
                   </p>
                 </div>
               </>
-            ) : (
-              // Telehealth View (No authentication required)
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-serif font-bold text-stone-900 flex items-center gap-2">
-                    <Video className="w-6 h-6 text-teal-600" />
-                    Telehealth Session
-                  </h2>
-                  <p className="text-stone-500">
-                    Ready to connect with Dr. Meusburger.
-                  </p>
-                </div>
-                
-                {/* Telehealth Session - Direct Access */}
-                <TelehealthSession 
-                  onEndCall={exitTelehealth} 
-                />
-              </div>
             )
+          }
+        </div>
           </div>
 
           {/* Sidebar Info (Right - 5 cols) */}
